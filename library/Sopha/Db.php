@@ -226,7 +226,7 @@ class Sopha_Db
      * @param  array  $params Parameters to pass to the view
      * @return mixed
      */
-    public function view($view, array $params = array())
+    public function view($view, array $params = array(), $return_doc = 'Sopha_Document')
     {
         require_once 'Zend/Json.php';
         
@@ -241,7 +241,8 @@ class Sopha_Db
         
         switch($response->getStatus()) {
             case 200:
-                return $response->getDocument();
+                require_once 'Sopha/View/Result.php';
+                return new Sopha_View_Result($response->getDocument(), $return_doc);
                 break;
                 
             case 404:
@@ -269,7 +270,6 @@ class Sopha_Db
     /**
      * Static DB manipulation functions
      */
-    
     
     /**
      * Create a database on a host and return it as an object
