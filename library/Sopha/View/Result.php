@@ -76,6 +76,60 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     }
     
     /**
+     * Return the document at the specified offset according to the return type
+     * 
+     * @param  integer $offset
+     * @return mixed
+     */
+    protected function returnDoc($offset)
+    {
+        $ret = null;
+        
+        if (isset($this->rows[$offset])) {
+            
+            switch($this->return_type) {
+                case self::RETURN_ARRAY:
+                    $ret =  $this->rows[$offset]['value'];
+                    break;
+                    
+                case self::RETURN_JSON:
+                    $ret =  Zend_Json::encode($this->rows[$offset]['value']);
+                    break;
+                    
+                case self::RETURN_OBJECT:
+                    $ret =  new $this->doc_class($this->rows[$offset]['value']);
+                    break;
+            }
+                
+        } else {
+            throw new OutOfBoundsException('Pointer points to invalid index');
+        }
+        
+        return $ret;
+    }
+    
+    /**
+     * Get the metadata of a returned view record. 
+     * 
+     * The metadata of a returned record should normaly contain the id and key
+     * of each returned document.
+     * 
+     * @param  integer $offset Record offset. If not specified, will use current
+     * @return array
+     */
+    public function getViewMetadata($offset = null)
+    {
+        if ($offset === null) $offset = $this->pointer;
+        
+        if (! isset($this->rows[$offset])) return null;
+        
+        $data = $this->rows[$offset];
+        unset($data['value']);
+            
+        return $data;
+    }
+    
+    /**
      * SPL Countable Interface
      */
     
@@ -100,29 +154,7 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
      */
     public function current()
     {
-        $ret = null;
-        
-        if (isset($this->rows[$this->pointer])) {
-            
-            switch($this->return) {
-                case self::RETURN_ARRAY:
-                    $ret =  $this->rows[$this->pointer];
-                    break;
-                    
-                case self::RETURN_JSON:
-                    $ret =  Zend_Json::encode($this->rows[$this->pointer]);
-                    break;
-                    
-                case self::RETURN_OBJECT:
-                    $ret =  new $this->doc_class($this->rows[$this->pointer]);
-                    break;
-            }
-                
-        } else {
-            throw new OutOfBoundsException('Pointer points to invalid index');
-        }
-        
-        return $ret;
+        return $this->returnDoc($this->pointer);
     }
     
     public function key()
@@ -165,9 +197,9 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     
     public function offsetGet($offset)
     {
-        if (isset($this->rows[$offset])) {
-            return $this->rows[$offset];
-        } else {
+        try {
+            return $this->returnDoc($offset);
+        } catch (OutOfBoundsException $e) {
             return null;
         }
     }
