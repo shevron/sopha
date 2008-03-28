@@ -43,8 +43,9 @@ class Sopha_Document
     /**
      * Create a new document object
      *
-     * @param array  $data
-     * @param string $url
+     * @param array    $data
+     * @param string   $url  The URL of this doc
+     * @param Sopha_Db $db   The DB object this document belongs to
      */
     public function __construct(array $data = array(), $url = null, $db = null)
     {
@@ -65,7 +66,12 @@ class Sopha_Document
             }
         }
         
-        $this->url = $url;
+        // Set the URL
+        if ($url) {
+            $this->url = $url;
+        } elseif (isset($data['_id'])) {
+            $this->url = $db->getUrl() . urlencode($data['_id']);
+        }
     }
     
     /**
@@ -74,12 +80,16 @@ class Sopha_Document
      */
     public function save()
     {
-        if (! $this->url) {
-            require_once 'Sopha/Document/Exception.php';
-            throw new Sopha_Document_Exception("Unable to save a document without known URL");
+        if (! $this->url) { // Creating a new document
+            $newDoc = $this->db->create($this->data);
+            
+            $this->metadata['_id']  = $newDoc->getId();
+            $this->metadata['_rev'] = $newDoc->getRevision();
+            $this->url              = $newDoc->getUrl();
+            
+        } else { // Updating an existing document
+            $this->db->update($this, $this->url);
         }
-        
-        require_once 'Sopha/Http/Request.php';
     }
     
     /**

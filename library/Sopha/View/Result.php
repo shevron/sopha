@@ -140,7 +140,7 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
      */
     public function count()
     {
-        return $this->metadata['total_rows'];
+        return count($this->rows);
     }
 
     /**

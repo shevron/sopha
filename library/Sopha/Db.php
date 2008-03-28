@@ -177,14 +177,63 @@ class Sopha_Db
     }
     
     /**
-     * Update an existing document
+     * Update an existing document. 
+     * 
+     * The document must have a _id field, or the url has to be specified in 
+     * $doc. Also, the document must have a _rev field. Will return the doc's
+     * new revision.
      *
-     * @param string $doc
-     * @param mixed  $data
+     * @param  mixed   $data
+     * @param  string  $url
+     * @return string  New revision  
      */
-    public function update($doc, $data)
+    public function update($data, $url = null)
     {
+        require_once 'Zend/Json.php';
         
+        // Convert object to array if needed, and get revision and URL
+        if ($data instanceof Sopha_Document) {
+            if (! $url) $url = $data->getUrl();
+            $data = $data->toArray(true);
+            
+        } elseif (is_array($data)) {
+            if (! $url && isset($data['_id'])) $url = $this->_db_uri . $data['_id'];
+            
+        } else {
+            require_once 'Sopha/Db/Exception.php';
+            throw new Sopha_Db_Exception("Data is expected to be either an array or a Sopha_Document object");
+        }
+        
+        // Make sure we have a URL and a revision
+        if (! $url) {
+            require_once 'Sopha/Db/Exception.php';
+            throw new Sopha_Db_Exception("Unable to update a document without a known URL");
+        }
+        
+        if (! isset($data['_rev'])) {
+            require_once 'Sopha/Db/Exception.php';
+            throw new Sopha_Db_Exception("Unable to update a document without a known revision");
+        }
+        
+        $response = Sopha_Http_Request::put($url, Zend_Json::encode($data));
+        
+        switch ($response->getStatus()) {
+            case 201:
+                $responseData = $response->getDocument();
+                return $responseData['rev'];
+                break;
+                
+            case 409:
+                require_once 'Sopha/Db/Exception.php';
+                throw new Sopha_Db_Exception("Cannot save updated document: revision conflict", 409);
+                break;
+                
+            default:
+                require_once 'Sopha/Db/Exception.php';
+                throw new Sopha_Db_Exception("Unexpected response from server: " . 
+                	"{$response->getStatus()} {$response->getMessage()}", $response->getStatus());
+                break;
+        }
     }
     
     /**
@@ -226,7 +275,7 @@ class Sopha_Db
      * @param  array  $params Parameters to pass to the view
      * @return mixed
      */
-    public function view($view, array $params = array(), $return_doc = 'Sopha_Document')
+    public function view($view, array $params = array(), $return_doc = null)
     {
         require_once 'Zend/Json.php';
         
@@ -242,10 +291,13 @@ class Sopha_Db
         switch($response->getStatus()) {
             case 200:
                 require_once 'Sopha/View/Result.php';
+                
+                if (! $return_doc) $return_doc = Sopha_View_Result::RETURN_ARRAY;
                 return new Sopha_View_Result($response->getDocument(), $return_doc);
                 break;
                 
             case 404:
+                require_once 'Sopha/Db/Exception.php';
                 throw new Sopha_Db_Exception("View document '$view' does not exist", $response->getStatus());
                 break;
                 
