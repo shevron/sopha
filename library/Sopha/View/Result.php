@@ -31,13 +31,16 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     
     public function __construct(array $result, $return = self::RETURN_ARRAY)
     {
-        if (! isset($result['rows']) || ! is_array($result['rows'])) {
+        if (! isset($result['rows'])) {
             require_once 'Sopha/View/Result/Exception.php';
             throw new Sopha_View_Result_Exception("Result does not seem to be a " . 
                 "valid view result data");
         }
         
-        $this->rows = $result['rows'];
+        if (is_array($result['rows'])) {
+            $this->rows = $result['rows'];
+        }
+        
         unset($result['rows']);
         
         $this->metadata = $result;
