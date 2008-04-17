@@ -171,7 +171,7 @@ class Sopha_Http_Request
         $headers = $this->method . " " . $path . " " . 'HTTP/' . self::HTTP_VER . "\r\n";
         
         if (! isset($this->headers['host']) && $url['host']) {
-            $headers .= "Host: " . $url['host'] . "\r\n";
+            $headers .= "Date: " . date(DATE_RFC822) . "\r\n";
         }
         
         foreach($this->headers as $name => $header) {
@@ -184,19 +184,19 @@ class Sopha_Http_Request
     /**
      * Create the HTTP request body string
      *
-     * @todo   implement me!
-     * 
      * @return string
      */
     protected function buildBody()
     {
-       if ($this->method == self::GET || $this->method == self::DELETE) {
+       if ($this->method == self::GET    || 
+           $this->method == self::DELETE ||
+           ! strlen($this->data)) {
+               
            return '';
        }
        
        $this->headers['content-type'] = 'application/json';
        $this->headers['content-length'] = strlen($this->data);
-       
        return $this->data;
     }
     
@@ -278,7 +278,7 @@ class Sopha_Http_Request
 		$last_header = null;        
 
         // First, read response headers and put them into an associative array
-        while (($line = @fgets($this->socket))) {
+        while (($line = fgets($this->socket))) {
         	if (! $status_line && strpos($line, 'HTTP') === 0) {
         		$status_line = trim($line);
         		continue;
@@ -335,7 +335,7 @@ class Sopha_Http_Request
             if ($headers['transfer-encoding'] == 'chunked') {
                 do {
                     $chunk = '';
-                    $line = @fgets($this->socket);
+                    $line = fgets($this->socket);
 
                     $hexchunksize = ltrim(chop($line), '0');
                     $hexchunksize = strlen($hexchunksize) ? strtolower($hexchunksize) : 0;
@@ -354,7 +354,7 @@ class Sopha_Http_Request
                     }
 
                     // Read the end of line after the chunk
-                    @fgets($this->socket);
+                    fgets($this->socket);
                     
                     $body .= $chunk;
                     
