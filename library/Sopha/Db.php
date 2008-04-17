@@ -151,7 +151,7 @@ class Sopha_Db
         $url = $this->_db_uri;
         
         if ($doc) {
-            $response = Sopha_Http_Request::put($url . $doc, Zend_Json::encode($data));
+            $response = Sopha_Http_Request::put($url . urlencode($doc), Zend_Json::encode($data));
         } else {
             $response = Sopha_Http_Request::post($url, Zend_Json::encode($data));
         }
@@ -296,7 +296,7 @@ class Sopha_Db
                 return new Sopha_View_Result($response->getDocument(), $return_doc);
                 break;
                 
-            case 404:
+            case 500:
                 require_once 'Sopha/Db/Exception.php';
                 throw new Sopha_Db_Exception("View document '$view' does not exist", $response->getStatus());
                 break;
