@@ -95,15 +95,16 @@ class Sopha_Document
     /**
      * Delete document from DB
      *
+     * @return boolean True if delete successful - false otherwise
      */
     public function delete()
     {
-        if (! $this->url) {
+        if (! $this->metadata['_id'] || ! $this->metadata['_rev']){ 
             require_once 'Sopha/Document/Exception.php';
-            throw new Sopha_Document_Exception("Unable to delete a document without known URL");
+            throw new Sopha_Document_Exception("Unable to delete a document without known ID and revision number");
         }
         
-        require_once 'Sopha/Http/Request.php';
+        return $this->db->delete($this->metadata['_id'], $this->metadata['_rev']);
     }
     
     /**
