@@ -119,7 +119,7 @@ class Sopha_Http_Response
     public function getHeader($header)
     {
         $header = strtolower($header);
-        return isset($this->headers[$header]) ? $this->header[$header] : null;
+        return isset($this->headers[$header]) ? $this->headers[$header] : null;
     }
     
     /**

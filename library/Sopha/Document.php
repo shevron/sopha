@@ -138,12 +138,70 @@ class Sopha_Document
     
     /**
      * Get the current document's array of attachments (if any)
+     * 
+     * This only returns information about the attachments - not the actual data
      *
      * @return array
      */
     public function getAttachments()
     {
         return (isset($this->metadata['_attachments']) ? $this->metadata['_attachments'] : array()); 
+    }
+    
+    /**
+     * Set an attachement to the document
+     * 
+     * Will either set a new attachment or replace an existing one with the 
+     * same name
+     * 
+     * @param  string $name
+     * @param  string $type Content type
+     * @param  string $data  Attachement data
+     */
+    public function setAttachment($name, $type, $data)
+    {
+        if (! isset($this->metadata['_attachments'])) $this->metadata['attachments'] = array();
+
+        $attachment = array(
+            'content_type' => $type,
+            'data'         => base64_encode($data)
+        );
+        
+        $this->metadata['_attachments'][$name] = $attachment;
+    }
+    
+    /**
+     * Get one of the document's attachments as an Attachment object
+     * 
+     * @param  string $name Attachment name
+     * @return Sopha_Document_Attachment or null if no such attachment 
+     */
+    public function getAttachment($name)
+    {
+        // Make sure the attachment is supposed to exist
+        if (! isset($this->metadata['_attachments']) || 
+            ! isset($this->metadata['_attachments'][$name])) {
+            
+            return null;
+        }
+        
+        require_once 'Sopha/Document/Attachment.php';
+        
+        // Check if we have some non-saved attachment data
+        if (isset($this->metadata['_attachments'][$name]['data'])) {
+            return new Sopha_Document_Attachment($this->url, $name, 
+                $this->metadata['_attachments'][$name]['content_type'],
+                base64_decode($this->metadata['_attachments'][$name]['data']));
+                 
+        // Usually we dont - just return a stub Attachment object which will
+        // lazy-load the data from DB. Requires a URL though.
+        } else {
+            if (! $this->url) {
+                return null;
+            }
+                   
+            return new Sopha_Document_Attachment($this->url, $name);
+        }
     }
     
     /**

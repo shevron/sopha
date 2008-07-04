@@ -274,6 +274,7 @@ class Sopha_Http_Request
         }
         
         $status_line = null;
+        $status_code = null;
 		$headers = array();
 		$last_header = null;        
 
@@ -283,6 +284,8 @@ class Sopha_Http_Request
         		$status_line = trim($line);
         		continue;
         	}
+        	
+        	$status_code = (int) substr($status_line, 9, 3);
         	
         	$line = trim($line);
         	if (! $line) break;
@@ -320,18 +323,8 @@ class Sopha_Http_Request
         // Keep on reading the body - according to the headers
         $body = '';
         
-        // Specified content length to read
-        if (isset($headers['content-length'])) {
-            $left_to_read = $headers['content-length'];
-            $chunk = '';
-            while ($left_to_read > 0) {
-                $chunk = @fread($this->socket, $left_to_read);
-                $left_to_read -= strlen($chunk);
-                $body .= $chunk;
-            }
-            
         // Chunked transfer-encoding
-        } elseif (isset($headers['transfer-encoding'])) {
+        if (isset($headers['transfer-encoding'])) {
             if ($headers['transfer-encoding'] == 'chunked') {
                 do {
                     $chunk = '';
@@ -364,6 +357,20 @@ class Sopha_Http_Request
                 require_once 'Sopha/Http/Exception.php';
                 throw new Sopha_Http_Exception('Cannot handle "' . $headers['transfer-encoding'] . '" transfer encoding');
             }
+
+        // Specified content length to read
+        } elseif (isset($headers['content-length'])) {
+            $left_to_read = $headers['content-length'];
+            $chunk = '';
+            while ($left_to_read > 0) {
+                $chunk = @fread($this->socket, $left_to_read);
+                $left_to_read -= strlen($chunk);
+                $body .= $chunk;
+            }
+            
+        // If code is 304 or 204 no body is expected
+        } elseif ($status_code == 304 || $status_code == 204) {
+            $body .= '';
 
         // Fallback: just read the response (should not happen)
         } else {
