@@ -296,7 +296,7 @@ class Sopha_Db
                 return new Sopha_View_Result($response->getDocument(), $return_doc);
                 break;
                 
-            case 500:
+            case 404:
                 require_once 'Sopha/Db/Exception.php';
                 throw new Sopha_Db_Exception("View document '$view' does not exist", $response->getStatus());
                 break;
