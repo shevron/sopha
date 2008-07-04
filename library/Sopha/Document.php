@@ -80,8 +80,8 @@ class Sopha_Document
      */
     public function save()
     {
-        if (! $this->url) { // Creating a new document
-            $newDoc = $this->db->create($this->data);
+        if (! isset($this->metadata['_id'])) { // Creating a new document
+            $newDoc = $this->db->create($this->data, $this->url);
             
             $this->metadata['_id']  = $newDoc->getId();
             $this->metadata['_rev'] = $newDoc->getRevision();
@@ -95,16 +95,15 @@ class Sopha_Document
     /**
      * Delete document from DB
      *
-     * @return boolean True if delete successful - false otherwise
      */
     public function delete()
     {
-        if (! $this->metadata['_id'] || ! $this->metadata['_rev']){ 
+        if (! $this->url) {
             require_once 'Sopha/Document/Exception.php';
-            throw new Sopha_Document_Exception("Unable to delete a document without known ID and revision number");
+            throw new Sopha_Document_Exception("Unable to delete a document without known URL");
         }
         
-        return $this->db->delete($this->metadata['_id'], $this->metadata['_rev']);
+        require_once 'Sopha/Http/Request.php';
     }
     
     /**
