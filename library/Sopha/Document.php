@@ -229,6 +229,22 @@ class Sopha_Document
     }
     
     /**
+     * Load data from an associative array to document object
+     * 
+     * @param array $data
+     */
+    public function fromArray(array $data)
+    {
+        foreach($data as $k => $v) {
+            if (substr($k, 0, 1) == '_') { 
+                $this->metadata[$k] = $v;
+            } else {
+                $this->data[$k] = $v;
+            }
+        }
+    }
+    
+    /**
      * Allow direct access to reading properties
      *
      * @param  string $key
