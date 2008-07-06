@@ -40,4 +40,5 @@
  * be skipped.
  */
 
-define('ST_TESTDB_URL', false);
+// define('SOPHA_TEST_DB_URL', 'http://localhost:5984/sopha__test__');
+define('SOPHA_TEST_DB_URL', false);

@@ -20,10 +20,9 @@
  * @license    http://prematureoptimization.org/sopha/license/new-bsd 
  */
 
-require_once 'testConfiguration.php';
+require_once dirname(__FILE__) . '/TestHelper.php';
 
-require_once 'PHPUnit/Framework/TestSuite.php';
-require_once 'Http/RequestTest.php';
+require_once 'Sopha/Http/RequestTest.php';
 
 /**
  * Static test suite.
@@ -38,6 +37,7 @@ class AllTests extends PHPUnit_Framework_TestSuite
         $this->setName('AllTests');
         $this->addTestSuite('Sopha_Http_RequestTest');
     }
+    
     /**
      * Creates the suite.
      */

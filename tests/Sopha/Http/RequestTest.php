@@ -20,7 +20,10 @@
  * @license    http://prematureoptimization.org/sopha/license/new-bsd 
  */
 
-require_once '../testConfiguration.php';
+// Load the test helper
+require_once dirname(__FILE__) . '/../../TestHelper.php';
+
+// Load the tested class
 require_once 'Sopha/Http/Request.php';
 
 /**
@@ -38,8 +41,8 @@ class Sopha_Http_RequestTest extends PHPUnit_Framework_TestCase
      */
     protected function setUp ()
     {
-        if (defined('ST_TESTDB_URL') && ST_TESTDB_URL) {
-            $this->_url = ST_TESTDB_URL;
+        if (defined('SOPHA_TEST_DB_URL') && SOPHA_TEST_DB_URL) {
+            $this->_url = SOPHA_TEST_DB_URL;
         } else {
             $this->markTestSkipped('No CouchDB server was set up');
         }
