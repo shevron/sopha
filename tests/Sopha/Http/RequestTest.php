@@ -22,7 +22,6 @@
 
 require_once '../testConfiguration.php';
 require_once 'Sopha/Http/Request.php';
-require_once 'PHPUnit/Framework/TestCase.php';
 
 /**
  * Sopha_Http_Request test case.

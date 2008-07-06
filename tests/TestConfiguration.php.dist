@@ -26,22 +26,18 @@
  * Edit this file if you need to before running any tests
  */
 
-// Set the include path
-define('SOPHA_LIB_PATH', realpath(dirname(dirname(dirname(__FILE__))) . 
-                         DIRECTORY_SEPARATOR . 'library'));
-                         
-set_include_path(SOPHA_LIB_PATH . PATH_SEPARATOR . get_include_path());
-
-
-/**
- * Testing configuration
- */
 
 /**
  * CouchDB server location
  * 
- * Set ST_TESTDB_URL to boolean false if you don't havea CouchDB server set up and
- * want to skip these tests
+ * Set SOPHA_TESTDB_URL to the base URL (including host, port and DB path) of a
+ * CouchDB database to test against. If this database will not exist it will be
+ * created. If it does exist, its content will be deleted. This database will 
+ * be used to test Sopha.
+ * 
+ * If you have no access to a CouchDb server at the moment, set ST_TESTDB_URL 
+ * to boolean false. This will cause all tests that require a CouchDB server to
+ * be skipped.
  */
 
-define('ST_TESTDB_URL',   'http://localhost:5984/sopha__test__');
+define('ST_TESTDB_URL', false);
