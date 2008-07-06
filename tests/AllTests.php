@@ -16,7 +16,7 @@
  *
  * @package    Sopha
  * @category   Tests
- * @version    $Id: Exception.php 2 2008-03-20 21:58:05Z shahar.e $
+ * @version    $Id$
  * @license    http://prematureoptimization.org/sopha/license/new-bsd 
  */
 
