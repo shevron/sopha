@@ -1,1 +1,65 @@
-Some README stuff will be here
+-------------------------------------------------------------------------------
+Sopha - A PHP 5.x Interface to CouchDb                                 ver. 0.1
+(c) 2008 Shahar Evron, shahar@prematureoptimization.org              2008-07-15
+-------------------------------------------------------------------------------
+
+Important Note
+--------------
+This version of Sopha is a development version, and is not thuroughly tested. 
+It is not recommended to use this version of Sopha in production. You have been
+warned!
+
+
+License
+-------
+Sopha is free software distributed under the terms of the New BSD License. 
+See LICENSE or http://prematureoptimization.org/sopha/license/new-bsd for 
+licensing information. 
+
+
+System Requirements
+-------------------
+* Sopha requires PHP 5.2.0 and up in order to run - the latest stable version 
+  of PHP 5.2.x is recommended. Currently Sopha is not tested on other versions 
+  of PHP. 
+
+* While Sopha should work on any system capable of runnign PHP, it is currently
+  only tested on Linux. Users of other operating systems should report any bugs
+  if encountered. 
+
+* Sopha does not require any non-standard PHP extension or INI setting in order
+  work. If you encounter any issues, please report it along with the output of
+  phpinfo() from your system. 
+
+* You obviously need a CouchDb server installed in order to use Sopha. It 
+  doesn't do much except for connecting to CouchDb ;)
+
+Installation
+------------
+Since Sopha is fully implemented in PHP, there is not much installation needed.
+
+Assuming you downloaded Sopha, simply add the Sopha library/ directory to your
+PHP include_path and restart your server (if you use a web server). 
+
+You can also copy the entire library/Sopha directory as is into your include
+path (sometimes at /usr/share/php or /usr/include/php). 
+
+Once this is done you simply need to include or require Sopha into your 
+scripts, or just use autoload instead. 
+
+
+Usage
+-----
+See detailed usage information at http://prematureoptimization.org/sopha
+
+
+Acknowledgements
+----------------
+Sopha is a mere interface to CouchDb - a phenomenal piece of free software.
+Credit goes to the main contibutors of CouchDb - namely Damien Katz, Jan 
+Lenhardt, Christopher Lenz and Noah Slater - as well as many others.
+
+The CouchDb project is an Apache Incubator project, and can be found at 
+http://incubator.apache.org/couchdb/
+
+
