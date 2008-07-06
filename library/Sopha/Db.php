@@ -378,7 +378,7 @@ class Sopha_Db
         $response = Sopha_Http_Request::delete($url);
         
         switch($response->getStatus()) {
-            case 202: // Expected
+            case 200: // Expected
                 return true;
                 break;
                 
@@ -404,7 +404,7 @@ class Sopha_Db
      */
     static public function getAllDbs($host = 'localhost', $port = self::COUCH_PORT)
     {
-        $url = substr(self::makeDbUrl('_all_dbs', $host, $port), 0, -1);
+        $url = self::makeUrl($host, $port, '_all_dbs');
         
         $response = Sopha_Http_Request::get($url);
         if (! $response->isSuccess()) {
@@ -417,7 +417,35 @@ class Sopha_Db
     }
     
     /**
-     * Validate parts and create a database URL
+     * Validate parts and create a generic URL
+     *
+     * @param  string $host
+     * @param  string $port
+     * @param  string $path
+     * @return string
+     */
+    static protected function makeUrl($host, $port, $path)
+    {
+        // Validate host
+        if (! preg_match('/^(?:(?:[a-zA-Z0-9][a-zA-Z0-9\-]{0,62}\.)*[a-zA-Z0-9][a-zA-Z0-9\-]{0,62})' . '{1,254}$/', $host)) {
+            require_once 'Sopha/Exception.php';
+            throw new Sopha_Exception("Invalid host name: '$host'");
+        }
+        
+        // Validate port
+        $port = (integer) $port;
+        if ($port < 0x1 || $port > 0xffff) {
+            require_once 'Sopha/Exception.php';
+            throw new Sopha_Exception("Invalid db port: '$port'");
+        }
+        
+        // TODO: Validate Path ?
+        
+        return 'http://' . $host . ':' . $port . '/' . $path;
+    }
+    
+    /**
+     * A specific case of makeUrl used to create DB base URLs
      *
      * @param  string  $dbname
      * @param  string  $host
@@ -427,29 +455,12 @@ class Sopha_Db
     static protected function makeDbUrl($dbname, $host, $port)
     {
         // Validate dbname
-        if (! preg_match('|^[a-z0-9_\$\(\)+\-/]+$|', $dbname)) {
+        if (! preg_match('|^[a-z][a-z0-9_\$\(\)+\-/]*$|', $dbname)) {
             require_once 'Sopha/Exception.php';
             throw new Sopha_Exception("Invalid db name: '$dbname'");
         }
         
-        // Validate host
-        if (! preg_match('/^(?:(?:[a-zA-Z0-9\-]{1,63}\.)*[a-zA-Z0-9\-]{1,63}){1,254}$/', $host)) {
-            require_once 'Sopha/Exception.php';
-            throw new Sopha_Exception("Invalid host name: '$host'");
-        }
-        
-        // Validate port
-        $port = (integer) $port;
-        if (! $port) {
-            $port = self::COUCH_PORT;
-            
-        } elseif ($port < 0x1 || $port > 0xffff) {
-            require_once 'Sopha/Exception.php';
-            throw new Sopha_Exception("Invalid db port: '$port'");
-            
-        }
-        
-        return 'http://' . $host . ':' . $port . '/' . 
-            str_replace('/', '%2F', $dbname) . '/'; 
+        $dbname = str_replace('/', '%2F', $dbname) . '/';
+        return  self::makeUrl($host, $port, $dbname);
     }
 }
