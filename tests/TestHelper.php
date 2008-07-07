@@ -48,9 +48,8 @@ $_path_tests = $_path_root . 'tests';
 // Omit the contents of the tests directory from code coverage reports
 PHPUnit_Util_Filter::addDirectoryToFilter($_path_tests, '.php');
 
-// Add the library and tests directories to the include path
-$_path = array($_path_lib, $_path_tests, get_include_path());
-set_include_path(implode(PATH_SEPARATOR, $_path));
+// Set the include path to only include library and test dirs
+set_include_path($_path_lib . PATH_SEPARATOR . $_path_tests);
 
 // Read the configuration file if available
 if (is_readable($_path_tests . DIRECTORY_SEPARATOR . 'TestConfiguration.php')) {
@@ -66,4 +65,5 @@ if (defined('TESTS_GENERATE_REPORT') && TESTS_GENERATE_REPORT === true &&
 }
 
 // Unset global variables that are no longer needed
-unset($_path_root, $_path_lib, $_path_tests, $_path);
+unset($_path_root, $_path_lib, $_path_tests);
+
