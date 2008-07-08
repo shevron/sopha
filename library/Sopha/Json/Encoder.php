@@ -1,39 +1,36 @@
 <?php
+
 /**
- * Zend Framework
+ * Sopha - A PHP 5.x Interface to CouchDB
  *
  * LICENSE
  *
  * This source file is subject to the new BSD license that is bundled
- * with this package in the file LICENSE.txt.
+ * with this package in the file LICENSE.
  * It is also available through the world-wide-web at this URL:
- * http://framework.zend.com/license/new-bsd
+ * http://prematureoptimization.org/sopha/license/new-bsd
+ * 
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
  * to license@zend.com so we can send you a copy immediately.
  *
- * @category   Zend
- * @package    Zend_Json
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
- * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @package    Sopha
+ * @subpackage Json
+ * @version    $Id: Exception.php 15 2008-07-06 16:18:05Z shahar $
+ * @license    http://prematureoptimization.org/sopha/license/new-bsd 
  */
-
 
 /**
- * Zend_Json_Exception
+ * This code was mostly adapted from Zend_Json - a part of the Zend Framework
+ * Copyright (c) 2005-2008 Zend Technologies USA Inc., licensed under the
+ * New BSD License. See http://framework.zend.com for more information.
  */
-require_once 'Zend/Json/Exception.php';
-
 
 /**
  * Encode PHP constructs to JSON
  *
- * @category   Zend
- * @package    Zend_Json
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
- * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Zend_Json_Encoder
+class Sopha_Json_Encoder
 {
     /**
      * Whether or not to check for possible cycling
@@ -106,13 +103,14 @@ class Zend_Json_Encoder
      *
      * @param $value object
      * @return string
-     * @throws Zend_Json_Exception If recursive checks are enabled and the object has been serialized previously
+     * @throws Sopha_Json_Exception If recursive checks are enabled and the object has been serialized previously
      */
     protected function _encodeObject(&$value)
     {
         if ($this->_cycleCheck) {
             if ($this->_wasVisited($value)) {
-                throw new Zend_Json_Exception(
+                require_once 'Sopha/Json/Exception.php';
+                throw new Sopha_Json_Exception(
                     'Cycles not supported in JSON encoding, cycle introduced by '
                     . 'class "' . get_class($value) . '"'
                 );
@@ -374,13 +372,14 @@ class Zend_Json_Encoder
      * @param $package string Optional package name appended to JavaScript
      * proxy class name
      * @return string The class2 (JavaScript) encoding of the class
-     * @throws Zend_Json_Exception
+     * @throws Sopha_Json_Exception
      */
     public static function encodeClass($className, $package = '')
     {
         $cls = new ReflectionClass($className);
         if (! $cls->isInstantiable()) {
-            throw new Zend_Json_Exception("$className must be instantiable");
+            require_once 'Sopha/Json/Exception.php';
+            throw new Sopha_Json_Exception("$className must be instantiable");
         }
 
         return "Class.create('$package$className',{"

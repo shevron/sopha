@@ -58,7 +58,7 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
         $this->return_type = $return;
         
         if ($return == self::RETURN_JSON) {
-            require_once 'Zend/Json.php';
+            require_once 'Sopha/Json.php';
             
         } elseif (is_string($return)) {
             require_once 'Zend/Loader.php';
@@ -106,7 +106,7 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
                     break;
                     
                 case self::RETURN_JSON:
-                    $ret =  Zend_Json::encode($this->rows[$offset]['value']);
+                    $ret =  Sopha_Json::encode($this->rows[$offset]['value']);
                     break;
                     
                 case self::RETURN_OBJECT:

@@ -221,8 +221,8 @@ class Sopha_Document
      */
     public function __toString()
     {
-        require_once 'Zend/Json.php';
-        return Zend_Json::encode(array_merge($this->metadata, $this->data));
+        require_once 'Sopha/Json.php';
+        return Sopha_Json::encode(array_merge($this->metadata, $this->data));
     }
     
     /**

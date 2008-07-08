@@ -22,8 +22,10 @@
 
 require_once dirname(__FILE__) . '/TestHelper.php';
 
+// Sopha Tests
 require_once 'Sopha/Http/RequestTest.php';
 require_once 'Sopha/DbTest.php';
+require_once 'Sopha/JsonTest.php';
 
 /**
  * Static test suite.
@@ -36,8 +38,10 @@ class AllTests extends PHPUnit_Framework_TestSuite
     public function __construct ()
     {
         $this->setName('AllTests');
+
         $this->addTestSuite('Sopha_Http_RequestTest');
-	$this->addTestSuite('Sopha_DbTest');
+        $this->addTestSuite('Sopha_DbTest');
+        $this->addTestSuite('Sopha_JsonTest');
     }
     
     /**

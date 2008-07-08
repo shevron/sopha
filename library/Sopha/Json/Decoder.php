@@ -1,57 +1,52 @@
 <?php
+
 /**
- * Zend Framework
+ * Sopha - A PHP 5.x Interface to CouchDB
  *
  * LICENSE
  *
  * This source file is subject to the new BSD license that is bundled
- * with this package in the file LICENSE.txt.
+ * with this package in the file LICENSE.
  * It is also available through the world-wide-web at this URL:
- * http://framework.zend.com/license/new-bsd
+ * http://prematureoptimization.org/sopha/license/new-bsd
+ * 
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
  * to license@zend.com so we can send you a copy immediately.
  *
- * @category   Zend
- * @package    Zend_Json
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
- * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @package    Sopha
+ * @subpackage Json
+ * @version    $Id: Exception.php 15 2008-07-06 16:18:05Z shahar $
+ * @license    http://prematureoptimization.org/sopha/license/new-bsd 
  */
 
 /**
- * Zend_Json
+ * This code was mostly adapted from Zend_Json - a part of the Zend Framework
+ * Copyright (c) 2005-2008 Zend Technologies USA Inc., licensed under the
+ * New BSD License. See http://framework.zend.com for more information.
  */
-require_once 'Zend/Json.php';
 
-/**
- * Zend_Json_Exception
- */
-require_once 'Zend/Json/Exception.php';
-
+require_once 'Sopha/Json.php';
 
 /**
  * Decode JSON encoded string to PHP variable constructs
  *
- * @category   Zend
- * @package    Zend_Json
- * @copyright  Copyright (c) 2005-2008 Zend Technologies USA Inc. (http://www.zend.com)
- * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Zend_Json_Decoder
+class Sopha_Json_Decoder
 {
     /**
      * Parse tokens used to decode the JSON object. These are not
      * for public consumption, they are just used internally to the
      * class.
      */
-    const EOF         = 0;
-    const DATUM        = 1;
-    const LBRACE    = 2;
-    const LBRACKET    = 3;
-    const RBRACE     = 4;
-    const RBRACKET    = 5;
-    const COMMA       = 6;
-    const COLON        = 7;
+    const EOF      = 0;
+    const DATUM    = 1;
+    const LBRACE   = 2;
+    const LBRACKET = 3;
+    const RBRACE   = 4;
+    const RBRACKET = 5;
+    const COMMA    = 6;
+    const COLON    = 7;
 
     /**
      * Use to maintain a "pointer" to the source being decoded
@@ -95,7 +90,7 @@ class Zend_Json_Decoder
      *
      * @param string $source String source to decode
      * @param int $decodeType How objects should be decoded -- see
-     * {@link Zend_Json::TYPE_ARRAY} and {@link Zend_Json::TYPE_OBJECT} for
+     * {@link Sopha_Json::TYPE_ARRAY} and {@link Sopha_Json::TYPE_OBJECT} for
      * valid values
      * @return void
      */
@@ -108,9 +103,9 @@ class Zend_Json_Decoder
         $this->_offset       = 0;
 
         // Normalize and set $decodeType
-        if (!in_array($decodeType, array(Zend_Json::TYPE_ARRAY, Zend_Json::TYPE_OBJECT)))
+        if (!in_array($decodeType, array(Sopha_Json::TYPE_ARRAY, Sopha_Json::TYPE_OBJECT)))
         {
-            $decodeType = Zend_Json::TYPE_ARRAY;
+            $decodeType = Sopha_Json::TYPE_ARRAY;
         }
         $this->_decodeType   = $decodeType;
 
@@ -132,26 +127,28 @@ class Zend_Json_Decoder
      *         - array of one or more of the above types
      *
      * By default, decoded objects will be returned as associative arrays; to
-     * return a StdClass object instead, pass {@link Zend_Json::TYPE_OBJECT} to
+     * return a StdClass object instead, pass {@link Sopha_Json::TYPE_OBJECT} to
      * the $objectDecodeType parameter.
      *
-     * Throws a Zend_Json_Exception if the source string is null.
+     * Throws a Sopha_Json_Exception if the source string is null.
      *
      * @static
      * @access public
      * @param string $source String to be decoded
      * @param int $objectDecodeType How objects should be decoded; should be
-     * either or {@link Zend_Json::TYPE_ARRAY} or
-     * {@link Zend_Json::TYPE_OBJECT}; defaults to TYPE_ARRAY
+     * either or {@link Sopha_Json::TYPE_ARRAY} or
+     * {@link Sopha_Json::TYPE_OBJECT}; defaults to TYPE_ARRAY
      * @return mixed
-     * @throws Zend_Json_Exception
+     * @throws Sopha_Json_Exception
      */
-    public static function decode($source = null, $objectDecodeType = Zend_Json::TYPE_ARRAY)
+    public static function decode($source = null, $objectDecodeType = Sopha_Json::TYPE_ARRAY)
     {
         if (null === $source) {
-            throw new Zend_Json_Exception('Must specify JSON encoded source for decoding');
+            require_once 'Sopha/Json/Exception.php';
+            throw new Sopha_Json_Exception('Must specify JSON encoded source for decoding');
         } elseif (!is_string($source)) {
-            throw new Zend_Json_Exception('Can only decode JSON encoded strings');
+            require_once 'Sopha/Json/Exception.php';
+            throw new Sopha_Json_Exception('Can only decode JSON encoded strings');
         }
 
         $decoder = new self($source, $objectDecodeType);
@@ -189,8 +186,8 @@ class Zend_Json_Decoder
      * Decodes an object of the form:
      *  { "attribute: value, "attribute2" : value,...}
      *
-     * If ZJsonEnoder or ZJAjax was used to encode the original object
-     * then a special attribute called __className which specifies a class
+     * If Sopha_Json_Encoder was used to encode the original object then 
+     * a special attribute called __className which specifies a class
      * name that should wrap the data contained within the encoded source.
      *
      * Decodes to either an array or StdClass object, based on the value of
@@ -206,14 +203,16 @@ class Zend_Json_Decoder
 
         while ($tok && $tok != self::RBRACE) {
             if ($tok != self::DATUM || ! is_string($this->_tokenValue)) {
-                throw new Zend_Json_Exception('Missing key in object encoding: ' . $this->_source);
+                require_once 'Sopha/Json/Exception.php';
+                throw new Sopha_Json_Exception('Missing key in object encoding: ' . $this->_source);
             }
 
             $key = $this->_tokenValue;
             $tok = $this->_getNextToken();
 
             if ($tok != self::COLON) {
-                throw new Zend_Json_Exception('Missing ":" in object encoding: ' . $this->_source);
+                require_once 'Sopha/Json/Exception.php';
+                throw new Sopha_Json_Exception('Missing ":" in object encoding: ' . $this->_source);
             }
 
             $tok = $this->_getNextToken();
@@ -225,21 +224,22 @@ class Zend_Json_Decoder
             }
 
             if ($tok != self::COMMA) {
-                throw new Zend_Json_Exception('Missing "," in object encoding: ' . $this->_source);
+                require_once 'Sopha/Json/Exception.php';
+                throw new Sopha_Json_Exception('Missing "," in object encoding: ' . $this->_source);
             }
 
             $tok = $this->_getNextToken();
         }
 
         switch ($this->_decodeType) {
-            case Zend_Json::TYPE_OBJECT:
+            case Sopha_Json::TYPE_OBJECT:
                 // Create new StdClass and populate with $members
                 $result = new StdClass();
                 foreach ($members as $key => $value) {
                     $result->$key = $value;
                 }
                 break;
-            case Zend_Json::TYPE_ARRAY:
+            case Sopha_Json::TYPE_ARRAY:
             default:
                 $result = $members;
                 break;
@@ -271,7 +271,8 @@ class Zend_Json_Decoder
             }
 
             if ($tok != self::COMMA) {
-                throw new Zend_Json_Exception('Missing "," in array encoding: ' . $this->_source);
+                require_once 'Sopha/Json/Exception.php';
+                throw new Sopha_Json_Exception('Missing "," in array encoding: ' . $this->_source);
             }
 
             $tok = $this->_getNextToken();
@@ -383,7 +384,8 @@ class Zend_Json_Decoder
                                 $result .= '\'';
                                 break;
                             default:
-                                throw new Zend_Json_Exception("Illegal escape "
+                                require_once 'Sopha/Json/Exception.php';
+                                throw new Sopha_Json_Exception("Illegal escape "
                                     .  "sequence '" . $chr . "'");
                             }
                     } elseif ($chr == '"') {
@@ -434,21 +436,24 @@ class Zend_Json_Decoder
 
                 if (is_numeric($datum)) {
                     if (preg_match('/^0\d+$/', $datum)) {
-                        throw new Zend_Json_Exception("Octal notation not supported by JSON (value: $datum)");
+                        require_once 'Sopha/Json/Exception.php';
+                        throw new Sopha_Json_Exception("Octal notation not supported by JSON (value: $datum)");
                     } else {
                         $val  = intval($datum);
                         $fVal = floatval($datum);
                         $this->_tokenValue = ($val == $fVal ? $val : $fVal);
                     }
                 } else {
-                    throw new Zend_Json_Exception("Illegal number format: $datum");
+                    require_once 'Sopha/Json/Exception.php';
+                    throw new Sopha_Json_Exception("Illegal number format: $datum");
                 }
 
                 $this->_token = self::DATUM;
                 $this->_offset = $start + strlen($datum);
             }
         } else {
-            throw new Zend_Json_Exception('Illegal Token');
+            require_once 'Sopha/Json/Exception.php';
+            throw new Sopha_Json_Exception('Illegal Token');
         }
 
         return($this->_token);

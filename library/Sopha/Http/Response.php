@@ -64,8 +64,8 @@ class Sopha_Http_Response
     public function getDocument()
     {
         if (! $this->document) {
-            require_once 'Zend/Json.php';
-            $this->document = Zend_Json::decode($this->body);
+            require_once 'Sopha/Json.php';
+            $this->document = Sopha_Json::decode($this->body);
         }
 
         return $this->document;

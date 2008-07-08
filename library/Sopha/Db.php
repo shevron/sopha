@@ -156,14 +156,14 @@ class Sopha_Db
      */
     public function create($data, $doc = null)
     {
-        require_once 'Zend/Json.php';
+        require_once 'Sopha/Json.php';
         
         $url = $this->_db_uri;
         
         if ($doc) {
-            $response = Sopha_Http_Request::put($url . urlencode($doc), Zend_Json::encode($data));
+            $response = Sopha_Http_Request::put($url . urlencode($doc), Sopha_Json::encode($data));
         } else {
-            $response = Sopha_Http_Request::post($url, Zend_Json::encode($data));
+            $response = Sopha_Http_Request::post($url, Sopha_Json::encode($data));
         }
         
         switch ($response->getStatus()) {
@@ -199,7 +199,7 @@ class Sopha_Db
      */
     public function update($data, $url = null)
     {
-        require_once 'Zend/Json.php';
+        require_once 'Sopha/Json.php';
         
         // Convert object to array if needed, and get revision and URL
         if ($data instanceof Sopha_Document) {
@@ -225,7 +225,7 @@ class Sopha_Db
             throw new Sopha_Db_Exception("Unable to update a document without a known revision");
         }
         
-        $response = Sopha_Http_Request::put($url, Zend_Json::encode($data));
+        $response = Sopha_Http_Request::put($url, Sopha_Json::encode($data));
         
         switch ($response->getStatus()) {
             case 201:
@@ -287,13 +287,13 @@ class Sopha_Db
      */
     public function view($view, array $params = array(), $return_doc = null)
     {
-        require_once 'Zend/Json.php';
+        require_once 'Sopha/Json.php';
         
         $url = $this->_db_uri . '_view/' . $view;
         $request = new Sopha_Http_Request($url);
         
         foreach($params as $k => $v) {
-            $request->addQueryParam($k, Zend_Json::encode($v));
+            $request->addQueryParam($k, Sopha_Json::encode($v));
         }
         
         $response = $request->send();
