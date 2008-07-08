@@ -62,4 +62,6 @@ Lenhardt, Christopher Lenz and Noah Slater - as well as many others.
 The CouchDb project is an Apache Incubator project, and can be found at 
 http://incubator.apache.org/couchdb/
 
-
+Some of the code in Sopha, namely the part handling JSON, was adapted from
+Zend Framework - a high-quality framework for PHP 5.x led by Zend Technologies.
+See http://framework.zend.com for more information about ZF.

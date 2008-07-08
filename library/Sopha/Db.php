@@ -108,6 +108,45 @@ class Sopha_Db
      */
     
     /**
+     * Create a new document and save it in DB. Will return the new Document object
+     *
+     * @param  mixed  $data
+     * @param  string $doc
+     * @return Sopha_Document
+     */
+    public function create($data, $doc = null)
+    {
+        require_once 'Sopha/Json.php';
+        
+        $url = $this->_db_uri;
+        
+        if ($doc) {
+            $response = Sopha_Http_Request::put($url . urlencode($doc), Sopha_Json::encode($data));
+        } else {
+            $response = Sopha_Http_Request::post($url, Sopha_Json::encode($data));
+        }
+        
+        switch ($response->getStatus()) {
+            case 201:
+                $responseData = $response->getDocument();
+                $url .= urlencode($responseData['id']);
+                
+                $data['_id'] = $responseData['id'];
+                $data['_rev'] = $responseData['rev'];
+
+                require_once 'Sopha/Document.php';                                                 
+                return new Sopha_Document($data, $url, $this);
+                break;
+                
+            default:
+                require_once 'Sopha/Db/Exception.php';
+                throw new Sopha_Db_Exception("Unexpected response from server: " . 
+                    "{$response->getStatus()} {$response->getMessage()}", $response->getStatus());
+                break;
+        }
+    }
+    
+    /**
      * Retrieve a document from the DB
      *
      * @param  string  $doc
@@ -137,45 +176,6 @@ class Sopha_Db
                 
             case 404:
                 return false;
-                break;
-                
-            default:
-                require_once 'Sopha/Db/Exception.php';
-                throw new Sopha_Db_Exception("Unexpected response from server: " . 
-                	"{$response->getStatus()} {$response->getMessage()}", $response->getStatus());
-                break;
-        }
-    }
-    
-    /**
-     * Create a new document and save it in DB. Will return the new Document object
-     *
-     * @param  mixed  $data
-     * @param  string $doc
-     * @return Sopha_Document
-     */
-    public function create($data, $doc = null)
-    {
-        require_once 'Sopha/Json.php';
-        
-        $url = $this->_db_uri;
-        
-        if ($doc) {
-            $response = Sopha_Http_Request::put($url . urlencode($doc), Sopha_Json::encode($data));
-        } else {
-            $response = Sopha_Http_Request::post($url, Sopha_Json::encode($data));
-        }
-        
-        switch ($response->getStatus()) {
-            case 201:
-                $responseData = $response->getDocument();
-                $url .= urlencode($responseData['id']);
-                
-                $data['_id'] = $responseData['id'];
-                $data['_rev'] = $responseData['rev'];
-
-                require_once 'Sopha/Document.php';                                                 
-                return new Sopha_Document($data, $url, $this);
                 break;
                 
             default:
@@ -262,7 +262,7 @@ class Sopha_Db
         $response = $request->send();
         
         switch ($response->getStatus()) {
-            case 202:
+            case 200:
                 return true;
                 break;
                 
