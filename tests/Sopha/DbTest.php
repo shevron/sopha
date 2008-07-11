@@ -294,12 +294,78 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
         $this->assertType('Sopha_Document', $doc);
         
         // Delete document
-        $db->delete('mydoc', $doc->getRevision());
+        $ret = $db->delete('mydoc', $doc->getRevision());
+        
+        // Make sure return value is true
+        $this->assertTrue($ret);
         
         // Try to fetch doc again 
         $this->assertFalse($db->retrieve('mydoc'));
         
         $this->_teardownDb();
+    }
+    
+    /**
+     * Test that deleting a missing document returns false
+     *
+     */
+    public function testDeleteMissingDocument()
+    {
+        if (! $this->_url) $this->markTestSkipped("Test requires a CouchDb server set up - see TestConfiguration.php");
+        $db = $this->_setupDb();
+        
+        // Delete missing document
+        $ret = $db->delete('mydoc');
+        
+        // Make sure return value is true
+        $this->assertFalse($ret);
+        
+        $this->_teardownDb();
+    }
+    
+    /**
+     * Tests Sopha_Db->update()
+     */
+    public function testUpdateInvalidInput()
+    {
+        // TODO Auto-generated Sopha_DbTest->testUpdate()
+        $this->markTestIncomplete("update test not implemented");
+        $this->Sopha_Db->update(/* parameters */);
+    }
+    
+    public function testUpdateObject()
+    {
+        $this->markTestIncomplete();
+    }
+    
+    public function testUpdateArray()
+    {
+        $this->markTestIncomplete();
+    }
+    
+    public function testUpdateObjectUrl()
+    {
+        $this->markTestIncomplete();
+    }
+    
+    public function testUpdateArrayUrl()
+    {
+        $this->markTestIncomplete();
+    }
+   
+    public function testUpdateArrayMissingUrl()
+    {
+        $this->markTestIncomplete();
+    }
+    
+    public function testUpdateArrayMissingRevision()
+    {
+        $this->markTestIncomplete();
+    }
+    
+    public function testUpdateRevisionConflict()
+    {
+        $this->markTestIncomplete();
     }
     
     /**
@@ -310,16 +376,6 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
         // TODO Auto-generated Sopha_DbTest->testGetInfo()
         $this->markTestIncomplete("getInfo test not implemented");
         $this->Sopha_Db->getInfo(/* parameters */);
-    }
-
-    /**
-     * Tests Sopha_Db->update()
-     */
-    public function testUpdate()
-    {
-        // TODO Auto-generated Sopha_DbTest->testUpdate()
-        $this->markTestIncomplete("update test not implemented");
-        $this->Sopha_Db->update(/* parameters */);
     }
 
     /**
