@@ -308,6 +308,7 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
     /**
      * Test that deleting a missing document returns false
      *
+     * @expectedException Sopha_Db_Exception
      */
     public function testDeleteMissingDocument()
     {
@@ -315,10 +316,7 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
         $db = $this->_setupDb();
         
         // Delete missing document
-        $ret = $db->delete('mydoc');
-        
-        // Make sure return value is true
-        $this->assertFalse($ret);
+        $ret = $db->delete('mydoc', 12345);
         
         $this->_teardownDb();
     }
@@ -386,6 +384,34 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
         // TODO Auto-generated Sopha_DbTest->testView()
         $this->markTestIncomplete("view test not implemented");
         $this->Sopha_Db->view(/* parameters */);
+    }
+    
+    public function testAdHocView()
+    {
+        if (! $this->_url) $this->markTestSkipped("Test requires a CouchDb server set up - see TestConfiguration.php");
+        $db = $this->_setupDb();
+        
+        // Create several documents
+        $db->create(array('doctype' => 'text', 'name' => 'a', 'value' => 4));
+        $db->create(array('doctype' => 'text', 'name' => 'b', 'value' => 3));
+        $db->create(array('doctype' => 'text', 'name' => 'c', 'value' => 2));
+        $db->create(array('doctype' => 'text', 'name' => 'd', 'value' => 1));
+        $db->create(array('doctype' => 'image', 'name' => 'a', 'value' => 4));
+        $db->create(array('doctype' => 'image', 'name' => 'b', 'value' => 3));
+        $db->create(array('doctype' => 'image', 'name' => 'c', 'value' => 2));
+        $db->create(array('doctype' => 'image', 'name' => 'd', 'value' => 1));
+        
+        // Call ad-hoc view to only fetch text docs ordered by value field
+        $tempView = array(
+            'map' => "function(doc) { if (doc.doctype == 'text') { emit(doc.value, doc); } } "
+        );
+        $result = $db->view($tempView); /* @var $result Sopha_View_Result */ 
+        
+        $this->assertType('Sopha_View_Result', $result);
+        $this->assertEquals(4, $result->total_rows);
+        $this->assertEquals('d', $result[0]['name']);
+        
+        $this->_teardownDb();
     }
     
     /*************************************************************************

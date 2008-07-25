@@ -281,7 +281,7 @@ class Sopha_Db
     /**
      * Call a view document
      * 
-     * @param  string $view   View to call
+     * @param  mixed  $view   View to call. Passing an array will assume array is an ad-hoc view function
      * @param  array  $params Parameters to pass to the view
      * @return mixed
      */
@@ -291,7 +291,7 @@ class Sopha_Db
         
         if (is_array($view)) { // Calling an ad-hoc view
             $url = $this->_db_uri . '_temp_view';
-            $data = Sopha_Json::decode($view);
+            $data = Sopha_Json::encode($view);
             $request = new Sopha_Http_Request($url, Sopha_Http_Request::POST, $data);
                
         } else { // Calling a design-document view
