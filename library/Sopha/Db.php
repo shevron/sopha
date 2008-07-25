@@ -289,8 +289,15 @@ class Sopha_Db
     {
         require_once 'Sopha/Json.php';
         
-        $url = $this->_db_uri . '_view/' . $view;
-        $request = new Sopha_Http_Request($url);
+        if (is_array($view)) { // Calling an ad-hoc view
+            $url = $this->_db_uri . '_temp_view';
+            $data = Sopha_Json::decode($view);
+            $request = new Sopha_Http_Request($url, Sopha_Http_Request::POST, $data);
+               
+        } else { // Calling a design-document view
+            $url = $this->_db_uri . '_view/' . $view;
+            $request = new Sopha_Http_Request($url);
+        }
         
         foreach($params as $k => $v) {
             $request->addQueryParam($k, Sopha_Json::encode($v));
