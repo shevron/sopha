@@ -283,7 +283,7 @@ class Sopha_Db
      * 
      * @param  mixed  $view   View to call. Passing an array will assume array is an ad-hoc view function
      * @param  array  $params Parameters to pass to the view
-     * @return mixed
+     * @return Sopha_View_Result
      */
     public function view($view, array $params = array(), $return_doc = null)
     {
