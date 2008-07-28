@@ -172,12 +172,10 @@ class Sopha_Document_Attachment
         
         if ($this->data) {
             header("Content-type: " . $this->getMimeType());
-//            header("Content-length: " . $this->getSize());
             echo $this->data;
         } else {
             // TODO: This is where passthru should be implemented!
             header("Content-type: " . $this->getMimeType());
-//            header("Content-length: " . $this->getSize());
             echo $this->getData();
         }
     }
