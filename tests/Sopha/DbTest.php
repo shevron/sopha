@@ -135,9 +135,9 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
         
         try {
             $db = Sopha_Db::createDb($dbname, $host, $port);
-            $this->fail("::createDb was expected to fail with a 409 error code");
+            $this->fail("createDb was expected to fail with a 409 error code");
         } catch (Sopha_Db_Exception $e) {
-            $this->assertEquals(409, $e->getCode(), "Error code is not 409");
+            $this->assertEquals(412, $e->getCode(), "Error code is not 409");
         }
     }
     
@@ -232,14 +232,13 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
         
         $doc = $db->create(array('a' => 1), 'mydoc');
         
-        
         try { 
             $doc = $db->create(array('a' => 1), 'mydoc');
             $this->_teardownDb();
             $this->fail("Expected Sopha_Db_Exception was not thrown");
         } catch (Sopha_Db_Exception $e) {
             $this->_teardownDb();
-            $this->assertEquals(412, $e->getCode(), "HTTP error code is expected to be 412");
+            $this->assertEquals(409, $e->getCode(), "HTTP error code is expected to be 412");
         }
     }
 
@@ -308,7 +307,6 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
     /**
      * Test that deleting a missing document returns false
      *
-     * @expectedException Sopha_Db_Exception
      */
     public function testDeleteMissingDocument()
     {
@@ -317,6 +315,7 @@ class Sopha_DbTest extends PHPUnit_Framework_TestCase
         
         // Delete missing document
         $ret = $db->delete('mydoc', 12345);
+        $this->assertFalse($ret);
         
         $this->_teardownDb();
     }
