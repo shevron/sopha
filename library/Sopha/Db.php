@@ -16,7 +16,6 @@
  *
  * @package    Sopha
  * @subpackage Db
- * @version    $Id$
  * @license    http://prematureoptimization.org/sopha/license/new-bsd 
  */
 
@@ -121,6 +120,7 @@ class Sopha_Db
         $url = $this->_db_uri;
         
         if ($doc) {
+        	$doc = self::encodeDocPath($doc);
             $response = Sopha_Http_Request::put($url . urlencode($doc), Sopha_Json::encode($data));
         } else {
             $response = Sopha_Http_Request::post($url, Sopha_Json::encode($data));
@@ -157,7 +157,7 @@ class Sopha_Db
      */
     public function retrieve($doc, $class = 'Sopha_Document', $rev = null, $full = false)
     {
-        $url = $this->_db_uri . urlencode($doc);
+        $url = $this->_db_uri . self::encodeDocPath($doc);
         $request = new Sopha_Http_Request($url);
         if ($rev !== null) $request->addQueryParam('rev', $rev);
         if ($full) $request->addQueryParam('full', 'true'); 
@@ -200,6 +200,10 @@ class Sopha_Db
     public function update($data, $url = null)
     {
         require_once 'Sopha/Json.php';
+        
+        if ($url) {
+        	$url = self::encodeDocPath($url);
+        }
         
         // Convert object to array if needed, and get revision and URL
         if ($data instanceof Sopha_Document) {
@@ -255,7 +259,7 @@ class Sopha_Db
      */
     public function delete($doc, $rev)
     {
-        $url = $this->_db_uri . urlencode($doc);
+        $url = $this->_db_uri . self::encodeDocPath($doc);
         $request = new Sopha_Http_Request($url, 'DELETE');
         $request->addQueryParam('rev', $rev);
         
@@ -295,7 +299,7 @@ class Sopha_Db
             $request = new Sopha_Http_Request($url, Sopha_Http_Request::POST, $data);
                
         } else { // Calling a design-document view
-            $url = $this->_db_uri . '_view/' . $view;
+            $url = $this->_db_uri . '_view/' . urlencode($view);
             $request = new Sopha_Http_Request($url);
         }
         
@@ -358,9 +362,9 @@ class Sopha_Db
                 return new Sopha_Db($dbname, $host, $port);
                 break;
                 
-            case 409: // DB already exists
+            case 412: // DB already exists
                 require_once 'Sopha/Db/Exception.php';
-                throw new Sopha_Db_Exception("Database '$dbname' already exists", 409);
+                throw new Sopha_Db_Exception("Database '$dbname' already exists", 412);
                 break;
                 
             default: // Unexpected
@@ -434,7 +438,7 @@ class Sopha_Db
     static protected function makeUrl($host, $port, $path)
     {
         // Validate host
-        if (! preg_match('/^(?:(?:[a-zA-Z0-9][a-zA-Z0-9\-]{0,62}\.)*[a-zA-Z0-9][a-zA-Z0-9\-]{0,62})' . '{1,254}$/', $host)) {
+        if (! preg_match('/^(?:(?:[a-zA-Z0-9][a-zA-Z0-9\-]{0,62}\.)*[a-zA-Z0-9][a-zA-Z0-9\-]{0,62}){1,254}$/', $host)) {
             require_once 'Sopha/Exception.php';
             throw new Sopha_Exception("Invalid host name: '$host'");
         }
@@ -468,6 +472,31 @@ class Sopha_Db
         }
         
         $dbname = str_replace('/', '%2F', $dbname) . '/';
-        return  self::makeUrl($host, $port, $dbname);
+        return self::makeUrl($host, $port, $dbname);
+    }
+    
+    /**
+     * Encode a document path into a CouchDB-complient path
+     * 
+     * If $path is a string, will return a URL-encoded version of the same 
+     * string. If $path is an array, will return a string made of the URL 
+     * encoded members of the array, joied by litteral (non-encoded) '/'. This 
+     * is useful for accessing design documents and attachments. 
+     * 
+     * @param  array|string $path
+     * @return string
+     */
+    static protected function encodeDocPath($path)
+    {
+    	if (is_array($path)) {
+    		foreach($path as $k => $v) {
+    			$path[$k] = urlencode($v);
+    		}
+    		return implode('/', $path);
+    		
+    	} else {
+    		return urlencode($path);
+    		
+    	}
     }
 }

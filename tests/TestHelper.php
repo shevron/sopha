@@ -36,7 +36,7 @@ require_once 'PHPUnit/Runner/Version.php';
 require_once 'PHPUnit/TextUI/TestRunner.php';
 require_once 'PHPUnit/Util/Filter.php';
 
-// Set error reporting to the level to which Zend Framework code must comply.
+// Set error reporting to the level to which code must comply.
 error_reporting( E_ALL | E_STRICT ); 
 
 // Determine paths
