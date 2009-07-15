@@ -49,7 +49,9 @@ $_path_tests = $_path_root . 'tests';
 PHPUnit_Util_Filter::addDirectoryToFilter($_path_tests, '.php');
 
 // Set the include path to only include library and test dirs
-set_include_path($_path_lib . PATH_SEPARATOR . $_path_tests);
+set_include_path($_path_lib . PATH_SEPARATOR . 
+                 $_path_tests . PATH_SEPARATOR . 
+                 get_include_path());
 
 // Read the configuration file if available
 if (is_readable($_path_tests . DIRECTORY_SEPARATOR . 'TestConfiguration.php')) {
