@@ -27,28 +27,28 @@ class Sopha_Document
      *
      * @var array
      */
-    protected $data     = array();
+    protected $_data     = array();
     
     /**
      * Array of metadata
      *
      * @var array
      */
-    protected $metadata = array();
+    protected $_metadata = array();
     
     /**
      * Document URL
      *
      * @var string
      */
-    protected $url      = null;
+    protected $_url      = null;
     
     /**
      * Associated database object (if any)
      *
      * @var Sopha_Db
      */
-    protected $db       = null;
+    protected $_db       = null;
     
     /**
      * Create a new document object
@@ -65,22 +65,22 @@ class Sopha_Document
                 throw new Sopha_Document_Exception("\$db is expected to be a Sopha_Db object, got " . gettype($db));
             }
             
-            $this->db = $db;
+            $this->_db = $db;
         }
         
         foreach($data as $k => $v) {
             if (substr($k, 0, 1) == '_') { 
-                $this->metadata[$k] = $v;
+                $this->_metadata[$k] = $v;
             } else {
-                $this->data[$k] = $v;
+                $this->_data[$k] = $v;
             }
         }
         
         // Set the URL
         if ($url) {
-            $this->url = $url;
+            $this->_url = $url;
         } elseif (isset($data['_id'])) {
-            $this->url = $db->getUrl() . urlencode($data['_id']);
+            $this->_url = $db->getUrl() . urlencode($data['_id']);
         }
     }
     
@@ -90,15 +90,15 @@ class Sopha_Document
      */
     public function save()
     {
-        if (! isset($this->metadata['_id'])) { // Creating a new document
-            $newDoc = $this->db->create($this->data, $this->url);
+        if (! isset($this->_metadata['_id'])) { // Creating a new document
+            $newDoc = $this->_db->create($this->_data, $this->_url);
             
-            $this->metadata['_id']  = $newDoc->getId();
-            $this->metadata['_rev'] = $newDoc->getRevision();
-            $this->url              = $newDoc->getUrl();
+            $this->_metadata['_id']  = $newDoc->getId();
+            $this->_metadata['_rev'] = $newDoc->getRevision();
+            $this->_url              = $newDoc->getUrl();
             
         } else { // Updating an existing document
-            $this->db->update($this, $this->url);
+            $this->_db->update($this, $this->_url);
         }
     }
     
@@ -108,7 +108,7 @@ class Sopha_Document
      */
     public function delete()
     {
-        if (! $this->url) {
+        if (! $this->_url) {
             require_once 'Sopha/Document/Exception.php';
             throw new Sopha_Document_Exception("Unable to delete a document without known URL");
         }
@@ -123,7 +123,7 @@ class Sopha_Document
      */
     public function getRevision()
     {
-        return (isset($this->metadata['_rev']) ? $this->metadata['_rev'] : null); 
+        return (isset($this->_metadata['_rev']) ? $this->_metadata['_rev'] : null); 
     }
     
     /**
@@ -133,7 +133,7 @@ class Sopha_Document
      */
     public function getId()
     {
-        return (isset($this->metadata['_id']) ? $this->metadata['_id'] : null);
+        return (isset($this->_metadata['_id']) ? $this->_metadata['_id'] : null);
     }
     
     /**
@@ -143,7 +143,7 @@ class Sopha_Document
      */
     public function getUrl()
     {
-        return $this->url;
+        return $this->_url;
     }
     
     /**
@@ -155,7 +155,7 @@ class Sopha_Document
      */
     public function getAttachments()
     {
-        return (isset($this->metadata['_attachments']) ? $this->metadata['_attachments'] : array()); 
+        return (isset($this->_metadata['_attachments']) ? $this->_metadata['_attachments'] : array()); 
     }
     
     /**
@@ -170,14 +170,14 @@ class Sopha_Document
      */
     public function setAttachment($name, $type, $data)
     {
-        if (! isset($this->metadata['_attachments'])) $this->metadata['attachments'] = array();
+        if (! isset($this->_metadata['_attachments'])) $this->_metadata['attachments'] = array();
 
         $attachment = array(
             'content_type' => $type,
             'data'         => base64_encode($data)
         );
         
-        $this->metadata['_attachments'][$name] = $attachment;
+        $this->_metadata['_attachments'][$name] = $attachment;
     }
     
     /**
@@ -189,8 +189,8 @@ class Sopha_Document
     public function getAttachment($name)
     {
         // Make sure the attachment is supposed to exist
-        if (! isset($this->metadata['_attachments']) || 
-            ! isset($this->metadata['_attachments'][$name])) {
+        if (! isset($this->_metadata['_attachments']) || 
+            ! isset($this->_metadata['_attachments'][$name])) {
             
             return null;
         }
@@ -198,19 +198,19 @@ class Sopha_Document
         require_once 'Sopha/Document/Attachment.php';
         
         // Check if we have some non-saved attachment data
-        if (isset($this->metadata['_attachments'][$name]['data'])) {
-            return new Sopha_Document_Attachment($this->url, $name, 
-                $this->metadata['_attachments'][$name]['content_type'],
-                base64_decode($this->metadata['_attachments'][$name]['data']));
+        if (isset($this->_metadata['_attachments'][$name]['data'])) {
+            return new Sopha_Document_Attachment($this->_url, $name, 
+                $this->_metadata['_attachments'][$name]['content_type'],
+                base64_decode($this->_metadata['_attachments'][$name]['data']));
                  
         // Usually we dont - just return a stub Attachment object which will
         // lazy-load the data from DB. Requires a URL though.
         } else {
-            if (! $this->url) {
+            if (! $this->_url) {
                 return null;
             }
                    
-            return new Sopha_Document_Attachment($this->url, $name);
+            return new Sopha_Document_Attachment($this->_url, $name);
         }
     }
     
@@ -222,7 +222,7 @@ class Sopha_Document
     public function __toString()
     {
         require_once 'Sopha/Json.php';
-        return Sopha_Json::encode(array_merge($this->metadata, $this->data));
+        return Sopha_Json::encode(array_merge($this->_metadata, $this->_data));
     }
     
     /**
@@ -233,8 +233,8 @@ class Sopha_Document
      */
     public function toArray($metadata = false)
     {
-        $data = $this->data;
-        if ($metadata) $data = array_merge($data, $this->metadata);
+        $data = $this->_data;
+        if ($metadata) $data = array_merge($data, $this->_metadata);
         return $data;
     }
     
@@ -247,9 +247,9 @@ class Sopha_Document
     {
         foreach($data as $k => $v) {
             if (substr($k, 0, 1) == '_') { 
-                $this->metadata[$k] = $v;
+                $this->_metadata[$k] = $v;
             } else {
-                $this->data[$k] = $v;
+                $this->_data[$k] = $v;
             }
         }
     }
@@ -262,8 +262,8 @@ class Sopha_Document
      */
     public function __get($key)
     {
-        if (isset($this->data[$key])) {
-            return $this->data[$key];
+        if (isset($this->_data[$key])) {
+            return $this->_data[$key];
         } else {
             return null;
         }
@@ -277,7 +277,7 @@ class Sopha_Document
      */
     public function __set($key, $value)
     {
-        $this->data[$key] = $value;
+        $this->_data[$key] = $value;
     }
     
     /**
@@ -288,7 +288,7 @@ class Sopha_Document
      */
     public function __isset($key)
     {
-        return isset($this->data[$key]);
+        return isset($this->_data[$key]);
     }
     
     /**
@@ -298,6 +298,6 @@ class Sopha_Document
      */
     public function __unset($key)
     {
-        if (isset($this->data[$key])) unset($this->data[$key]);
+        if (isset($this->_data[$key])) unset($this->_data[$key]);
     }
 }

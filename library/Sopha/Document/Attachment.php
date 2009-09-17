@@ -55,7 +55,7 @@ class Sopha_Document_Attachment
      * 
      * @var string
      */
-    protected $data = null;
+    protected $_data = null;
     
     /**
      * Attachment size in bytes

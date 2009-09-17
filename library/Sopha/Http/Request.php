@@ -34,7 +34,7 @@ class Sopha_Http_Request
     
     const HTTP_VER = '1.1';
     
-    protected $url;
+    protected $_url;
     
     protected $method;
     
@@ -42,7 +42,7 @@ class Sopha_Http_Request
     
     protected $query = array();
     
-    protected $data;
+    protected $_data;
     
     protected $socket = null;
     

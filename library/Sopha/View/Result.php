@@ -29,7 +29,7 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     const RETURN_JSON      = 2;
     const RETURN_OBJECT    = 4;
     
-    protected $metadata    = array();
+    protected $_metadata    = array();
 
     protected $rows        = array();
     
@@ -53,7 +53,7 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
         
         unset($result['rows']);
         
-        $this->metadata = $result;
+        $this->_metadata = $result;
         
         $this->return_type = $return;
         
@@ -235,8 +235,8 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     
     public function __get($key) 
     {
-        if (isset($this->metadata[$key])) {
-            return $this->metadata[$key];
+        if (isset($this->_metadata[$key])) {
+            return $this->_metadata[$key];
         } else {
             return null;
         }
@@ -244,7 +244,7 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     
     public function __isset($key)
     {
-        return isset($this->metadata[$key]);
+        return isset($this->_metadata[$key]);
     }
     
     public function __set($key, $value)
