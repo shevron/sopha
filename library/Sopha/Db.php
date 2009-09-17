@@ -283,26 +283,64 @@ class Sopha_Db
     }
     
     /**
-     * Call a view document
+     * Call a view function of a deisgn document
      * 
-     * @param  mixed  $view   View to call. Passing an array will assume array is an ad-hoc view function
-     * @param  array  $params Parameters to pass to the view
+     * @param  string $designDoc design document name
+     * @param  string $view      view function name
+     * @param  array  $params    parameters to pass to the view
+     * @param  mixed  $returnDoc return document type
      * @return Sopha_View_Result
      */
-    public function view($view, array $params = array(), $return_doc = null)
+    public function view($designDoc, $view, array $params = array(), $returnDoc = null)
     {
         require_once 'Sopha/Json.php';
         
-        if (is_array($view)) { // Calling an ad-hoc view
-            $url = $this->_db_uri . '_temp_view';
-            $data = Sopha_Json::encode($view);
-            $request = new Sopha_Http_Request($url, Sopha_Http_Request::POST, $data);
-               
-        } else { // Calling a design-document view
-            $url = $this->_db_uri . '_view/' . urlencode($view);
-            $request = new Sopha_Http_Request($url);
+        $url = $this->_db_uri . '_design/' . urlencode($designDoc) . '/_view/' . urlencode($view);
+        $request = new Sopha_Http_Request($url);
+        foreach($params as $k => $v) {
+            $request->addQueryParam($k, Sopha_Json::encode($v));
         }
         
+        $response = $request->send();
+        
+        switch($response->getStatus()) {
+            case 200:
+                require_once 'Sopha/View/Result.php';
+                
+                if (! $returnDoc) $returnDoc = Sopha_View_Result::RETURN_ARRAY;
+                return new Sopha_View_Result($response->getDocument(), $returnDoc);
+                break;
+                
+            case 404:
+                require_once 'Sopha/Db/Exception.php';
+                throw new Sopha_Db_Exception("View document '$designDoc/$view' does not exist", 
+                    $response->getStatus());
+                break;
+                
+            default:
+                require_once 'Sopha/Db/Exception.php';
+                throw new Sopha_Db_Exception("Unexpected response from server: " . 
+                	"{$response->getStatus()} {$response->getMessage()}", $response->getStatus());
+                break;
+        }
+    }
+    
+    /**
+     * Call an ad-hoc view function
+     * 
+     * @param  array  $view   View function code to call
+     * @param  array  $params Parameters to pass to the view
+     * @param  mixed  $return_doc Type of document to return 
+     * @return Sopha_View_Result
+     */
+    public function adHocView($view, array $params = array(), $return_doc = null)
+    {
+        require_once 'Sopha/Json.php';
+        
+        $url = $this->_db_uri . '_temp_view';
+        $data = Sopha_Json::encode($view);
+        $request = new Sopha_Http_Request($url, Sopha_Http_Request::POST, $data);
+
         foreach($params as $k => $v) {
             $request->addQueryParam($k, Sopha_Json::encode($v));
         }
@@ -317,15 +355,10 @@ class Sopha_Db
                 return new Sopha_View_Result($response->getDocument(), $return_doc);
                 break;
                 
-            case 404:
-                require_once 'Sopha/Db/Exception.php';
-                throw new Sopha_Db_Exception("View document '$view' does not exist", $response->getStatus());
-                break;
-                
             default:
                 require_once 'Sopha/Db/Exception.php';
                 throw new Sopha_Db_Exception("Unexpected response from server: " . 
-                	"{$response->getStatus()} {$response->getMessage()}", $response->getStatus());
+                    "{$response->getStatus()} {$response->getMessage()}", $response->getStatus());
                 break;
         }
     }
