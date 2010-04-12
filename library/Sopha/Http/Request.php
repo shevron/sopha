@@ -34,24 +34,61 @@ class Sopha_Http_Request
     
     const HTTP_VER = '1.1';
     
+    /**
+     * URL
+     * 
+     * @var string
+     */
     protected $_url;
     
-    protected $method;
+    /**
+     * Request method (one of the constants above)
+     * 
+     * @var string
+     */
+    protected $_method;
     
-    protected $headers = array();
+    /**
+     * Request headers
+     * 
+     * @var array
+     */
+    protected $_headers = array();
     
-    protected $query = array();
+    /**
+     * Query parameters
+     *  
+     * @var array
+     */
+    protected $_query = array();
     
+    /**
+     * Request data
+     * 
+     * @var string
+     */
     protected $_data;
     
-    protected $socket = null;
+    /**
+     * Socket stream resource for current connection
+     * 
+     * @var resource
+     */
+    protected $_socket = null;
+
+    /**
+     * Peer (host:port) we are curently connected to
+     * 
+     * @var string
+     */
+    protected $_peer = null;
     
     /**
      * Static array of all connections to servers
      *
      * @var array
      */
-    static protected $connections = array();
+    static protected $_connections = array();
     
     /**
      * Create a new HTTP request object
@@ -64,9 +101,9 @@ class Sopha_Http_Request
      */
     public function __construct($url, $method = self::GET, $data = null)
     {
-        $this->url    = $url;
-        $this->method = $method;
-        $this->data   = $data;
+        $this->_url    = $url;
+        $this->_method = $method;
+        $this->_data   = $data;
     }
     
     /**
@@ -76,24 +113,34 @@ class Sopha_Http_Request
      */
     public function send()
     {
-        $url = parse_url($this->url);
-        
+        $url = parse_url($this->_url);
+
         // Build query string
-        if (isset($url['query'])) $this->query = array_merge(
-            parse_str($url['query']), $this->query);
+        if (isset($url['query'])) $this->_query = array_merge(
+            parse_str($url['query']), $this->_query);
             
-        if (! empty($this->query)) {
-            $url['query'] = http_build_query($this->query);
+        if (! empty($this->_query)) {
+            $url['query'] = http_build_query($this->_query);
         }
         
         // Build body and headers
-        $body = $this->buildBody();
-        $headers = $this->buildHeaders($url);
+        $body = $this->_buildBody();
+        $headers = $this->_buildHeaders($url);
         
         // Send HTTP request and read response
-        $this->connect($url['host'], $url['port']);
-        $this->write($headers . "\r\n" . $body);
-        list($status, $headers, $body) = $this->read();
+        $this->_connect($url['host'], $url['port']);
+        
+        // Attempt to reconned if connection is lost
+        // TODO: This is ugly and should be redone ;)
+        try {
+            $this->_write($headers . "\r\n" . $body);
+            list($status, $headers, $body) = $this->_read();
+        } catch (Sopha_Http_Exception $ex) {
+            $this->_close();
+            $this->_connect($url['host'], $url['port']);
+            $this->_write($headers . "\r\n" . $body);
+            list($status, $headers, $body) = $this->_read();
+        }
         
         return new Sopha_Http_Response($status, $headers, $body);
     }
@@ -106,7 +153,7 @@ class Sopha_Http_Request
      */
     public function addQueryParam($key, $value)
     {
-        $this->query[(string) $key] = $value;
+        $this->_query[(string) $key] = $value;
     }
     
     /***
@@ -173,19 +220,19 @@ class Sopha_Http_Request
      * @param  array $url parse_url() generated array
      * @return string
      */
-    protected function buildHeaders(array $url)
+    protected function _buildHeaders(array $url)
     {
         $path = $url['path'];
         if (isset($url['query'])) $path .= '?' . $url['query'];
         
-        $headers = $this->method . " " . $path . " " . 'HTTP/' . self::HTTP_VER . "\r\n";
+        $headers = $this->_method . " " . $path . " " . 'HTTP/' . self::HTTP_VER . "\r\n";
         
-        if (! isset($this->headers['host']) && $url['host']) {
+        if (! isset($this->_headers['host']) && $url['host']) {
             $headers .= "Date: " . date(DATE_RFC822) . "\r\n";
         }
         
-        foreach($this->headers as $name => $header) {
-            $headers .= $this->buildHeadersRecursive($name, $header);
+        foreach($this->_headers as $name => $header) {
+            $headers .= $this->_buildHeadersRecursive($name, $header);
         }
         
         return $headers;
@@ -196,18 +243,18 @@ class Sopha_Http_Request
      *
      * @return string
      */
-    protected function buildBody()
+    protected function _buildBody()
     {
-       if ($this->method == self::GET    || 
-           $this->method == self::DELETE ||
-           ! strlen($this->data)) {
+       if ($this->_method == self::GET    || 
+           $this->_method == self::DELETE ||
+           ! strlen($this->_data)) {
                
            return '';
        }
        
-       $this->headers['content-type'] = 'application/json';
-       $this->headers['content-length'] = strlen($this->data);
-       return $this->data;
+       $this->_headers['content-type'] = 'application/json';
+       $this->_headers['content-length'] = strlen($this->_data);
+       return $this->_data;
     }
     
     /**
@@ -218,7 +265,7 @@ class Sopha_Http_Request
      * @param  string|array $value
      * @return string
      */
-    protected function buildHeadersRecursive($name, $value)
+    protected function _buildHeadersRecursive($name, $value)
     {
         $return = '';
         
@@ -239,21 +286,25 @@ class Sopha_Http_Request
      * @param string  $host
      * @param integer $port
      */
-    protected function connect($host, $port)
+    protected function _connect($host, $port)
     {
-        if ($this->socket) return;
+        $peer = "$host:$port";
         
-        if (isset(self::$connections["$host:$port"])) {
-            $this->socket = self::$connections["$host:$port"];
+        if (isset(self::$_connections[$peer])) {
+            $this->_socket = self::$_connections[$peer];
+        }
+        
+        if (is_resource($this->_socket)) {
             return;
         }
          
-        if (! ($this->socket = fsockopen($host, $port, $errno, $errstr, 10))) {
+        if (! ($this->_socket = fsockopen($host, $port, $errno, $errstr, 10))) {
             require_once 'Sopha/Exception.php';
             throw new Sopha_Exception("Error connecting to CouchDb server: [$errno] $errstr");
         }
         
-        self::$connections["$host:$port"] = $this->socket;
+        self::$_connections[$peer] = $this->_socket;
+        $this->_peer = $peer;
     }
     
     /**
@@ -261,14 +312,14 @@ class Sopha_Http_Request
      *
      * @param string $data
      */
-    protected function write($data)
+    protected function _write($data)
     {
-        if (! $this->socket) {
+        if (! $this->_socket) {
             require_once 'Sopha/Exception.php';
             throw new Sopha_Exception("Lost connection to CouchDB server before sending data");
         }
         
-        fwrite($this->socket, $data);
+        fwrite($this->_socket, $data);
     }
     
     /**
@@ -276,9 +327,9 @@ class Sopha_Http_Request
      *
      * @return array Array of (string status line, array headers, string body)
      */
-    protected function read()
+    protected function _read()
     {
-        if (! $this->socket) {
+        if (! $this->_socket) {
             require_once 'Sopha/Http/Exception.php';
             throw new Sopha_Http_Exception("Lost connection to CouchDB server before reading response");
         }
@@ -289,15 +340,15 @@ class Sopha_Http_Request
 		$last_header = null;        
 
         // First, read response headers and put them into an associative array
-        while (($line = fgets($this->socket))) {
-        	if (! $status_line && strpos($line, 'HTTP') === 0) {
-        		$status_line = trim($line);
+        while (($line = fgets($this->_socket))) {
+            
+            $line = trim($line);
+        	if (! $status_line && strpos($line, 'HTTP/') === 0) {
+        		$status_line = $line;
+        		$status_code = (int) substr($status_line, 9, 3);
         		continue;
         	}
         	
-        	$status_code = (int) substr($status_line, 9, 3);
-        	
-        	$line = trim($line);
         	if (! $line) break;
 
             if (preg_match("|^([\w-]+):\s+(.+)|", $line, $m)) {
@@ -325,7 +376,7 @@ class Sopha_Http_Request
             }
         }
         
-        if (! $this->socket || ! $status_line) {
+        if (! $this->_socket || ! $status_line) {
             require_once 'Sopha/Http/Exception.php';
             throw new Sopha_Http_Exception("Unable to read HTTP response from server");
         }
@@ -338,7 +389,7 @@ class Sopha_Http_Request
             if ($headers['transfer-encoding'] == 'chunked') {
                 do {
                     $chunk = '';
-                    $line = fgets($this->socket);
+                    $line = fgets($this->_socket);
 
                     $hexchunksize = ltrim(chop($line), '0');
                     $hexchunksize = strlen($hexchunksize) ? strtolower($hexchunksize) : 0;
@@ -351,13 +402,13 @@ class Sopha_Http_Request
 
                     $left_to_read = $chunksize;
                     while ($left_to_read > 0) {
-                        $line = @fread($this->socket, $left_to_read);
+                        $line = @fread($this->_socket, $left_to_read);
                         $chunk .= $line;
                         $left_to_read -= strlen($line);
                     }
 
                     // Read the end of line after the chunk
-                    fgets($this->socket);
+                    fgets($this->_socket);
                     
                     $body .= $chunk;
                     
@@ -373,7 +424,7 @@ class Sopha_Http_Request
             $left_to_read = $headers['content-length'];
             $chunk = '';
             while ($left_to_read > 0) {
-                $chunk = @fread($this->socket, $left_to_read);
+                $chunk = @fread($this->_socket, $left_to_read);
                 $left_to_read -= strlen($chunk);
                 $body .= $chunk;
             }
@@ -384,7 +435,7 @@ class Sopha_Http_Request
 
         // Fallback: just read the response (should not happen)
         } else {
-            while (($buff = @fread($this->socket, 8192))) {
+            while (($buff = @fread($this->_socket, 8192))) {
                 $body .= $buff;
             }
         }
@@ -396,14 +447,15 @@ class Sopha_Http_Request
      * Close connection to HTTP couch server
      *
      */
-    protected function close()
+    protected function _close()
     {
-        if ($this->socket) {
-            fclose($this->socket);
+        if ($this->_socket) {
+            fclose($this->_socket);
         }
         
-        if (isset(self::$connections["{$this->host}:{$this->port}"])) {
-            unset(self::$connections["{$this->host}:{$this->port}"]);
+        if (isset($this->_peer) && isset(self::$_connections[$this->_peer])) {
+            unset(self::$_connections[$this->_peer]);
+            $this->_peer = null;
         }
     }
 }

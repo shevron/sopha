@@ -201,7 +201,7 @@ class Sopha_Db
     {
         require_once 'Sopha/Json.php';
         
-        if ($url) {
+        if ($url && substr($url, 0, 5) != 'http:') {
         	$url = self::encodeDocPath($url);
         }
         
