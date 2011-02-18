@@ -68,13 +68,7 @@ class Sopha_Document
             $this->_db = $db;
         }
         
-        foreach($data as $k => $v) {
-            if (substr($k, 0, 1) == '_') { 
-                $this->_metadata[$k] = $v;
-            } else {
-                $this->_data[$k] = $v;
-            }
-        }
+        $this->fromArray($data);
         
         // Set the URL
         if ($url) {
