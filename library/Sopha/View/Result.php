@@ -99,18 +99,22 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
         $ret = null;
         
         if (isset($this->_values[$offset])) {
-            
+            $data = $this->_values[$offset]['value'];
+            if ($data === null && isset($this->_values[$offset]['doc'])) {
+                $data = $this->_values[$offset]['doc'];
+            }
+ 
             switch($this->_return_type) {
                 case self::RETURN_ARRAY:
-                    $ret =  $this->_values[$offset]['value'];
+                    $ret =  $data; 
                     break;
                     
                 case self::RETURN_JSON:
-                    $ret =  Sopha_Json::encode($this->_values[$offset]['value']);
+                    $ret =  Sopha_Json::encode($data);
                     break;
                     
                 case self::RETURN_OBJECT:
-                    $ret =  new $this->_doc_class($this->_values[$offset]['value']);
+                    $ret =  new $this->_doc_class($data);
                     break;
             }
                 
