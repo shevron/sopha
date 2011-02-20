@@ -31,13 +31,13 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     
     protected $_metadata    = array();
 
-    protected $rows        = array();
+    protected $_values      = array();
     
-    protected $pointer     = 0;
+    protected $_pointer     = 0;
     
-    protected $return_type = 1;
+    protected $_return_type = 1;
     
-    protected $doc_class   = null;
+    protected $_doc_class   = null;
     
     public function __construct(array $result, $return = self::RETURN_ARRAY)
     {
@@ -48,14 +48,14 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
         }
         
         if (is_array($result['rows'])) {
-            $this->rows = $result['rows'];
+            $this->_values = $result['rows'];
         }
         
         unset($result['rows']);
         
         $this->_metadata = $result;
         
-        $this->return_type = $return;
+        $this->_return_type = $return;
         
         if ($return == self::RETURN_JSON) {
             require_once 'Sopha/Json.php';
@@ -74,8 +74,8 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
                         "Sopha_Document as expected");
                 }
                 
-                $this->doc_class = $return;
-                $this->return_type = self::RETURN_OBJECT;
+                $this->_doc_class = $return;
+                $this->_return_type = self::RETURN_OBJECT;
                 
             } catch (Zend_Exception $e) {
                 require_once 'Sopha/View/Result/Exception.php';
@@ -94,23 +94,23 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
      * @param  integer $offset
      * @return mixed
      */
-    protected function returnDoc($offset)
+    protected function _returnDoc($offset)
     {
         $ret = null;
         
-        if (isset($this->rows[$offset])) {
+        if (isset($this->_values[$offset])) {
             
-            switch($this->return_type) {
+            switch($this->_return_type) {
                 case self::RETURN_ARRAY:
-                    $ret =  $this->rows[$offset]['value'];
+                    $ret =  $this->_values[$offset]['value'];
                     break;
                     
                 case self::RETURN_JSON:
-                    $ret =  Sopha_Json::encode($this->rows[$offset]['value']);
+                    $ret =  Sopha_Json::encode($this->_values[$offset]['value']);
                     break;
                     
                 case self::RETURN_OBJECT:
-                    $ret =  new $this->doc_class($this->rows[$offset]['value']);
+                    $ret =  new $this->_doc_class($this->_values[$offset]['value']);
                     break;
             }
                 
@@ -122,24 +122,31 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     }
     
     /**
-     * Get the metadata of a returned view record. 
-     * 
-     * The metadata of a returned record should normaly contain the id and key
-     * of each returned document.
-     * 
-     * @param  integer $offset Record offset. If not specified, will use current
-     * @return array
+     * Get the key of the current view item
+     *
+     * @return string
      */
-    public function getViewMetadata($offset = null)
+    public function currentKey()
     {
-        if ($offset === null) $offset = $this->pointer;
-        
-        if (! isset($this->rows[$offset])) return null;
-        
-        $data = $this->rows[$offset];
-        unset($data['value']);
-            
-        return $data;
+        if (isset($this->_values[$this->_pointer]['key'])) {
+            return $this->_values[$this->_pointer]['key'];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+     * Get the ID of the document that emitted the current view item
+     *
+     * @return string
+     */
+    public function currentId()
+    {
+        if (isset($this->_values[$this->_pointer]['id'])) {
+            return $this->_values[$this->_pointer]['id'];
+        } else {
+            return null;
+        }
     }
     
     /**
@@ -153,9 +160,9 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
      */
     public function count()
     {
-        return count($this->rows);
+        return count($this->_values);
     }
-
+    
     /**
      * SPL SeekableIterator Interface (inherits from Iterator)
      */
@@ -167,33 +174,33 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
      */
     public function current()
     {
-        return $this->returnDoc($this->pointer);
+        return $this->_returnDoc($this->_pointer);
     }
     
     public function key()
     {
-        return $this->pointer;
+        return $this->_pointer;
     }
     
     public function next()
     {
-        $this->pointer += 1;
+        $this->_pointer += 1;
     }
     
     public function rewind()
     {
-        $this->pointer = 0;
+        $this->_pointer = 0;
     }
     
     public function valid()
     {
-        return isset($this->rows[$this->pointer]);
+        return isset($this->_values[$this->_pointer]);
     }
     
     public function seek($index)
     {
-        if (isset($this->rows[$index])) {
-            $this->pointer = $index; 
+        if (isset($this->_values[$index])) {
+            $this->_pointer = $index; 
         } else {
             throw new OutOfBoundsException('Invalid Seek Position');
         }
@@ -205,13 +212,13 @@ class Sopha_View_Result implements Countable, ArrayAccess, SeekableIterator
     
     public function offsetExists($offset)
     {
-        return isset($this->rows[$offset]);
+        return isset($this->_values[$offset]);
     }
     
     public function offsetGet($offset)
     {
         try {
-            return $this->returnDoc($offset);
+            return $this->_returnDoc($offset);
         } catch (OutOfBoundsException $e) {
             return null;
         }
